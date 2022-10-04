@@ -27,7 +27,7 @@ BLACK = (0, 0, 0)
 
 class PointLineView(QWidget):
     # Signal for sending mouse clicks to the GUI
-    pointclicked = pyqtSignal(str, QPointF)
+    point_clicked = pyqtSignal(str, QPointF)
 
     def __init__(self, status_bar, data_range):
         super(QWidget, self).__init__()
@@ -86,8 +86,8 @@ class PointLineView(QWidget):
     # Reimplemented to allow setting source/target nodes with mouse click
     def mousePressEvent(self, e):
         scale = self.get_scale()
-        self.pointclicked.emit(self.click_node,
-                               QPointF((e.x() - self.width()) / scale + 2, (self.height() - e.y()) / scale - 1))
+        self.point_clicked.emit(self.click_node,
+                                QPointF((e.x() - self.width()) / scale + 2, (self.height() - e.y()) / scale - 1))
         if self.click_node == 'start':
             self.click_node = 'end'
         else:
@@ -430,7 +430,7 @@ class Proj3GUI(QMainWindow):
         self.computeCost.setEnabled(False)
         self.sourceNode.textChanged.connect(self.check_path_inputs)
         self.targetNode.textChanged.connect(self.check_path_inputs)
-        self.view.pointclicked.connect(self.set_by_click)
+        self.view.point_clicked.connect(self.set_by_click)
         self.randSeed.textChanged.connect(self.check_gen_inputs)
         self.size.textChanged.connect(self.check_gen_inputs)
         self.generateButton.clicked.connect(self.generate_clicked)
