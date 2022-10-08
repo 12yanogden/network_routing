@@ -121,7 +121,7 @@ class PointLineView(QWidget):
                 painter.drawLine(ln)
         r = 1.0E3
         rect = QRectF(-r, -r, 2.0 * r, 2.0 * r)
-        align = QTextOption(Qt.AlignmentFlag.Alignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter))
+        align = QTextOption(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter)
         for color in self.labelList:
             c = QColor(color[0], color[1], color[2])
             painter.setPen(c)
