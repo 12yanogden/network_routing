@@ -96,18 +96,17 @@ class PointLineView(QWidget):
     def get_scale(self):
         xr = self.data_range['x']
         yr = self.data_range['y']
-        w = self.width()
-        h = self.height()
+        width = self.width()
+        height = self.height()
         w2h_desired_ratio = (xr[1] - xr[0]) / (yr[1] - yr[0])
-        if w / h < w2h_desired_ratio:
-            scale = w / (xr[1] - xr[0])
+        if width / height < w2h_desired_ratio:
+            scale = width / (xr[1] - xr[0])
         else:
-            scale = h / (yr[1] - yr[0])
+            scale = height / (yr[1] - yr[0])
         return scale
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing, True)
         scale = self.get_scale()
         tform = QTransform()
         tform.translate(self.width() / 2.0, self.height() / 2.0)
@@ -121,7 +120,7 @@ class PointLineView(QWidget):
                 painter.drawLine(ln)
         r = 1.0E3
         rect = QRectF(-r, -r, 2.0 * r, 2.0 * r)
-        align = QTextOption(Qt.Alignment(Qt.AlignHCenter | Qt.AlignVCenter))
+        align = QTextOption(Qt.AlignmentFlag.Alignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter))
         for color in self.labelList:
             c = QColor(color[0], color[1], color[2])
             painter.setPen(c)
@@ -142,11 +141,11 @@ class PointLineView(QWidget):
                 pt = QPointF(scale * point.x(), scale * point.y())
                 painter.drawEllipse(pt, 1.0, 1.0)
         if self.start_pt:
-            painter.setPen(QPen(QColor(0.0, 255.0, 0.0), 2.0))
+            painter.setPen(QPen(QColor(0, 255, 0), 2.0))
             pt = QPointF(scale * self.start_pt.x() - 0.0, scale * self.start_pt.y() - 0.0)
             painter.drawEllipse(pt, 4.0, 4.0)
         if self.end_pt:
-            painter.setPen(QPen(QColor(255.0, 0.0, 0.0), 2.0))
+            painter.setPen(QPen(QColor(255, 0, 0), 2.0))
             pt = QPointF(scale * self.end_pt.x() - 0.0, scale * self.end_pt.y() - 0.0)
             painter.drawEllipse(pt, 4.0, 4.0)
 
@@ -154,10 +153,28 @@ class PointLineView(QWidget):
 class Proj3GUI(QMainWindow):
     def __init__(self):
         super(Proj3GUI, self).__init__()
+        self.totalCost = None
+        self.targetNode = None
+        self.size = None
+        self.randSeed = None
+        self.speedup = None
+        self.heapTime = None
+        self.arrayTime = None
+        self.useBoth = None
+        self.useHeap = None
+        self.useUnsorted = None
+        self.computeCost = None
+        self.generateButton = None
+        self.view = None
+        self.data_range = None
+        self.graph_ready = None
+        self.status_bar = None
+        self.last_path = None
+        self.sourceNode = None
         self.RED_STYLE = "background-color: rgb(255, 220, 220)"
         self.PLAIN_STYLE = "background-color: rgb(255, 255, 255)"
         self.graph = None
-        self.initUI()
+        self.init_ui()
         self.solver = NetworkRoutingSolver()
         self.gen_params = (None, None)
 
@@ -306,7 +323,7 @@ class Proj3GUI(QMainWindow):
             widget.setStyleSheet(self.RED_STYLE)
         else:
             widget.setStyleSheet('')
-        return '' if retval == None else retval
+        return '' if retval is None else retval
 
     def check_path_inputs(self):
         if not self.graph_ready:
@@ -320,24 +337,24 @@ class Proj3GUI(QMainWindow):
             self.sourceNode.setEnabled(True)
             self.targetNode.setEnabled(True)
             self.computeCost.setEnabled(False)
-            valid_inds = [1, int(self.gen_params[1])]
+            valid_indexes = [1, int(self.gen_params[1])]
             points = self.graph.get_nodes()
-            src = self.check_input_value(self.sourceNode, valid_inds)
+            src = self.check_input_value(self.sourceNode, valid_indexes)
             if not src == '':
                 self.view.set_start_loc(points[src - 1].loc)
             else:
                 self.view.set_start_loc(None)
-            dest = self.check_input_value(self.targetNode, valid_inds)
-            if not dest == '':
-                if src == dest:
+            end = self.check_input_value(self.targetNode, valid_indexes)
+            if not end == '':
+                if src == end:
                     self.targetNode.setStyleSheet(self.RED_STYLE)
                     self.view.set_end_loc(None)
                 else:
-                    self.view.set_end_loc(points[dest - 1].loc)
+                    self.view.set_end_loc(points[end - 1].loc)
             else:
                 self.view.set_end_loc(None)
-            if (not src == self.last_path[0] or not dest == self.last_path[1]) and \
-                    (not src == '') and (not dest == '') and (not src == dest):
+            if (not src == self.last_path[0] or not end == self.last_path[1]) and \
+                    (not src == '') and (not end == '') and (not src == end):
                 self.computeCost.setEnabled(True)
                 self.view.repaint()
 
@@ -347,21 +364,21 @@ class Proj3GUI(QMainWindow):
         if not self.graph_ready:
             pass
         else:
-            id = -1
+            node_id = -1
             dist = math.inf
             for node in self.graph.nodes:
                 if math.sqrt(pow((abs(node.loc.x() - point.x())), 2) + pow((abs(node.loc.y() - point.y())), 2)) < dist:
                     dist = math.sqrt(pow((abs(node.loc.x() - point.x())), 2) + pow((abs(node.loc.y() - point.y())), 2))
-                    id = node.node_id + 1
-            if id != -1:
+                    node_id = node.node_id + 1
+            if node_id != -1:
                 self.view.clear_edges()
                 if clicked_node == 'start':
-                    self.sourceNode.setText(str(id))
+                    self.sourceNode.setText(str(node_id))
                 elif clicked_node == 'end':
-                    self.targetNode.setText(str(id))
+                    self.targetNode.setText(str(node_id))
                 self.check_path_inputs()
 
-    def initUI(self):
+    def init_ui(self):
         self.setWindowTitle('Network Routing')
         self.setWindowIcon(QIcon('icon312.png'))
         self.status_bar = QStatusBar()
@@ -370,11 +387,10 @@ class Proj3GUI(QMainWindow):
         box_widget = QWidget()
         box_widget.setLayout(vbox)
         self.setCentralWidget(box_widget)
-        SCALE = 1.0
-        self.data_range = {'x': [-2 * SCALE, 2 * SCALE], \
-                           'y': [-SCALE, SCALE]}
-        self.view = PointLineView(self.status_bar, \
-								  self.data_range)
+        scale = 1.0
+        self.data_range = {'x': [-2 * scale, 2 * scale],
+                           'y': [-scale, scale]}
+        self.view = PointLineView(self.status_bar, self.data_range)
         self.generateButton = QPushButton('Generate')
         self.computeCost = QPushButton('Compute Cost')
         self.useUnsorted = QRadioButton('Unsorted Array')
@@ -441,7 +457,7 @@ class Proj3GUI(QMainWindow):
 
 
 if __name__ == '__main__':
-    # This line allows CNTL-C in the terminal to kill the program
+    # This line allows Control-C in the terminal to kill the program
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
     app = QApplication(sys.argv)
