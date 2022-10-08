@@ -107,6 +107,7 @@ class PointLineView(QWidget):
 
     def paintEvent(self, event):
         painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         scale = self.get_scale()
         tform = QTransform()
         tform.translate(self.width() / 2.0, self.height() / 2.0)
