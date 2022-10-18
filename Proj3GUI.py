@@ -87,7 +87,8 @@ class PointLineView(QWidget):
     def mousePressEvent(self, e):
         scale = self.get_scale()
         self.point_clicked.emit(self.click_node,
-                                QPointF((e.x() - self.width()) / scale + 2, (self.height() - e.y()) / scale - 1))
+                                QPointF((e.position().x() - self.width()) / scale + 2,
+                                        (self.height() - e.position().y()) / scale - 1))
         if self.click_node == 'start':
             self.click_node = 'end'
         else:
