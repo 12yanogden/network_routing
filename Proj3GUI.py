@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-
-import math
 import random
 import signal
 import sys
@@ -19,7 +17,6 @@ else:
 
 
 # Import in the code with the actual implementation
-from CS312Graph import *
 from NetworkRoutingSolver import *
 
 BLACK = (0, 0, 0)

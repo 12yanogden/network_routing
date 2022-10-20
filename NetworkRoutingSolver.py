@@ -1,10 +1,8 @@
 #!/usr/bin/python3
 import math
-
-from Queue.ArrayQueue import ArrayQueue
-from CS312Graph import *
 import time
-
+from CS312Graph import *
+from Queue.ArrayQueue import ArrayQueue
 from Queue.HeapQueue import HeapQueue
 
 
@@ -20,38 +18,29 @@ class NetworkRoutingSolver:
         assert (type(network) == CS312Graph)
         self.network = network
 
+    # Time: O(|V|), Space: O(|V|)
     def initialize_dist_prev(self):
         for node in self.network.nodes:
             self.dist[node.node_id] = math.inf
             self.prev[node.node_id] = None
 
-    def get_edge(self, src_index, end_index):
-        for neighbor in self.network.nodes[src_index].neighbors:
-            if neighbor.end.node_id == end_index:
-                return neighbor
-
-        raise Exception("prev[" + src_index + "] neighbors does not contain node " + end_index)
-
+    # Time: O(|V|), Space: O(|V|)
     def get_shortest_path(self, end_index):
         self.end = end_index
 
         current_index = end_index
         path_edges = []
-        cost = 0
 
-        if self.prev[end_index] is None:
-            cost = float('inf')
+        # Iterate over O(|E|) edges
+        while self.prev[current_index] != current_index:
+            prev_index = self.prev[current_index]
 
-        else:
-            while self.prev[current_index] != current_index:
-                edge = self.get_edge(self.prev[current_index], current_index)
-                cost += edge.length
+            path_edges.append((self.network.nodes[current_index].loc, self.network.nodes[prev_index].loc,
+                               '{:.0f}'.format(self.dist[current_index] - self.dist[prev_index])))
 
-                path_edges.append((edge.src.loc, edge.end.loc, '{:.0f}'.format(edge.length)))
+            current_index = prev_index
 
-                current_index = self.prev[current_index]
-
-        return {'cost': cost, 'path': path_edges}
+        return {'cost': self.dist[end_index], 'path': path_edges}
 
     def make_queue(self, use_heap):
         if use_heap:
@@ -59,21 +48,32 @@ class NetworkRoutingSolver:
         else:
             return ArrayQueue(self.network.nodes, self.dist)
 
+    # Time: Array: O(|V|^2), Heap: O((|V| + |E|)log|V|)
+    # Space: Array: O(|V|), Heap: O(|V|)
     def compute_shortest_paths(self, src_index, use_heap=False):
         self.source = src_index
 
         t1 = time.time()
 
-        self.initialize_dist_prev()                         # Time: O(n), Space: O(n)
+        # Time: O(|V|), Space: O(|V|)
+        self.initialize_dist_prev()
 
         self.dist[src_index] = 0
         self.prev[src_index] = src_index
 
-        queue = self.make_queue(use_heap)                   # See ArrayQueue and HeapQueue
+        # Time: Array: O(|V|), Heap: O(|V|log|V|)
+        # Space: Array: O(|V|), Heap: O(|V|)
+        queue = self.make_queue(use_heap)
 
-        while not queue.is_empty():                         # Time: O(n), Space: O(1)
-            min_node = queue.delete_min()                   # See ArrayQueue and HeapQueue
+        # Iterates over O(|V|) nodes in the queue
+        # Time: Array: O(|V|^2), Heap: O((|V| + |E|)log|V|)
+        # Space: Array: O(|V|), Heap: O(|V|)
+        while not queue.is_empty():
+            # Time: Array: O(|V|), Heap: O(log|V|)
+            # Space: Array: O(|V|), Heap: O(log|V|)
+            min_node = queue.delete_min()
 
+            # Will ultimately iterate over O(|E|) edges
             for neighbor in min_node.neighbors:
                 src_node_id = min_node.node_id
                 end_node_id = neighbor.end.node_id
@@ -83,7 +83,9 @@ class NetworkRoutingSolver:
                     self.prev[end_node_id] = src_node_id
 
                     if queue.is_in_queue(neighbor.end):
-                        queue.decrease_key(end_node_id)     # See ArrayQueue and HeapQueue
+                        # Time: Array: O(1), Heap: O(log|V|)
+                        # Space: Array: O(1), Heap: O(log|V|)
+                        queue.decrease_key(end_node_id)
 
         t2 = time.time()
 

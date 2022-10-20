@@ -5,22 +5,22 @@ class HeapQueue(Queue):
     def __init__(self, nodes, dist):
         super().__init__(nodes, dist)
 
-    # Time: O(logn), Space: O(logn)
+    # Time: O(log|V|), Space: O(log|V|)
     def insert(self, node):
         current_index = len(self.queue)
 
         self.queue.append(node)
         self.index_table[node.node_id] = current_index
 
-        # Time: O(logn), Space: O(logn)
+        # Time: O(log|V|), Space: O(log|V|)
         self.bubble_up(current_index)
 
-    # Time: O(nlogn), Space: O(n)
+    # Time: O(|V|log|V|), Space: O(|V|)
     def make_queue(self, nodes):
         for node in nodes:
             self.insert(node)
 
-    # Time: O(logn), Space: O(logn)
+    # Time: O(log|V|), Space: O(log|V|)
     def delete_min(self):
         # Swap min with last
         self.swap(0, self.get_last_index())
@@ -29,13 +29,13 @@ class HeapQueue(Queue):
         min_dist_node = self.queue.pop()
         self.index_table.pop(min_dist_node.node_id)
 
-        # Bubble last down, Time: O(logn), Space: O(logn)
+        # Bubble last down, Time: O(log|V|), Space: O(log|V|)
         self.bubble_down(0)
 
         # Return min
         return min_dist_node
 
-    # Time: O(logn), Space: O(logn)
+    # Time: O(log|V|), Space: O(log|V|)
     def decrease_key(self, node_id):
         self.bubble_up(self.index_table[node_id])
 
@@ -65,11 +65,11 @@ class HeapQueue(Queue):
         self.index_table[self.queue[index1].node_id] = index1
         self.index_table[self.queue[index2].node_id] = index2
 
-    # Time: O(logn), Space: O(logn)
+    # Time: O(log|V|), Space: O(log|V|)
     def bubble_up(self, current_index):
         parent_index = self.get_parent_index(current_index)
 
-        # Iterate through O(logn) nodes
+        # Iterate through O(log|V|) nodes
         while current_index > 0 and self.get_dist(current_index) < self.get_dist(parent_index):
             # Swaps to bubble up
             self.swap(current_index, parent_index)
@@ -106,12 +106,12 @@ class HeapQueue(Queue):
         # Return min_child_index
         return min_child_index
 
-    # Time: O(logn), Space: O(logn)
+    # Time: O(log|V|), Space: O(log|V|)
     def bubble_down(self, current_index):
         left_child_index = self.get_left_child_index(current_index)
         right_child_index = self.get_right_child_index(current_index)
 
-        # Iterate through O(logn) nodes
+        # Iterate through O(log|V|) nodes
         while True:
             # Determines child to swap with
             min_child_index = self.calc_min_child(current_index, left_child_index, right_child_index)

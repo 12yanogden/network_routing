@@ -10,16 +10,16 @@ class ArrayQueue(Queue):
         self.queue.append(node)
         self.index_table[node.node_id] = len(self.queue) - 1
 
-    # Time: O(n), Space: O(n)
+    # Time: O(|V|), Space: O(|V|)
     def make_queue(self, nodes):
         for node in nodes:
             self.insert(node)
 
-    # Time: O(n), Space: O(n)
+    # Time: O(|V|), Space: O(|V|)
     def delete_min(self):
         min_value_index = 0
 
-        # Iterate through O(n) nodes
+        # Iterate through O(|V|) nodes
         for i in range(len(self.queue)):
             if self.get_dist(i) < self.get_dist(min_value_index):
                 min_value_index = i
